@@ -22,21 +22,15 @@
     line-height:1.62;-webkit-font-smoothing:antialiased;
   }
   .wrap{max-width:880px;margin:0 auto;padding:0 22px 96px;}
-  header.masthead{text-align:center;padding:54px 0 30px;position:relative;}
-  .flame{width:54px;height:74px;margin:0 auto 18px;position:relative;filter:drop-shadow(0 0 18px rgba(197,99,30,.45));}
-  .flame .body{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);width:30px;height:52px;
-    background:linear-gradient(180deg,#FCE9A6 0%,#F2A93B 38%,#E5641C 70%,#8E2D1B 100%);
-    border-radius:50% 50% 50% 50% / 64% 64% 36% 36%;transform-origin:50% 100%;animation:flicker 2.6s ease-in-out infinite;}
-  .flame .core{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:13px;height:28px;
-    background:linear-gradient(180deg,#FFF6D8,#FFD27A);border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;opacity:.92;animation:flicker 2.1s ease-in-out infinite reverse;}
-  .flame .base{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:46px;height:10px;border-radius:50%;
-    background:radial-gradient(ellipse at center,#3a2a1d 0%,rgba(58,42,29,0) 70%);}
-  @keyframes flicker{0%,100%{transform:translateX(-50%) scaleY(1) skewX(0)}25%{transform:translateX(-51%) scaleY(1.06) skewX(-2deg)}50%{transform:translateX(-49%) scaleY(.95) skewX(2deg)}75%{transform:translateX(-50%) scaleY(1.04) skewX(-1deg)}}
-  .eyebrow{font-family:"Marcellus",serif;letter-spacing:.32em;text-transform:uppercase;font-size:.72rem;color:var(--saffron);margin:0 0 10px;}
-  h1.title{font-family:"Tiro Devanagari Hindi",serif;font-weight:400;font-size:clamp(2.1rem,6vw,3.1rem);margin:0;color:var(--ember);}
-  .romanized{font-family:"Marcellus",serif;font-size:1rem;color:var(--muted);letter-spacing:.18em;margin-top:6px;text-transform:uppercase;}
-  .dek{max-width:600px;margin:16px auto 0;color:var(--muted);font-size:.96rem;}
-  .rule{height:1px;max-width:120px;margin:26px auto 0;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  header.masthead{display:flex;align-items:center;justify-content:center;gap:11px;padding:15px 58px 13px;position:relative;flex-wrap:nowrap;}
+  .flame{width:22px;height:31px;margin:0;flex:none;display:block;overflow:visible;filter:drop-shadow(0 1px 6px rgba(197,99,30,.5));}
+  .flame path{transform-box:fill-box;transform-origin:50% 100%;}
+  .flame .fl-body{animation:flicker 2.6s ease-in-out infinite;}
+  .flame .fl-core{animation:flicker 2.1s ease-in-out infinite reverse;}
+  @keyframes flicker{0%,100%{transform:scaleY(1) skewX(0deg)}25%{transform:scaleY(1.06) skewX(-3deg)}50%{transform:scaleY(.95) skewX(3deg)}75%{transform:scaleY(1.03) skewX(-1.5deg)}}
+  h1.title{font-family:"Tiro Devanagari Hindi",serif;font-weight:400;font-size:clamp(1.45rem,4.5vw,2.15rem);margin:0;color:var(--ember);line-height:1.25;white-space:nowrap;}
+  .romanized{font-family:"Marcellus",serif;font-size:.62em;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;}
+  @media(max-width:430px){.romanized{display:none;}h1.title{font-size:1.35rem;}}
   .toolbar{position:sticky;top:0;z-index:20;display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:12px;margin:30px 0 14px;
     background:rgba(251,246,236,.88);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:14px;}
   .search{flex:1 1 200px;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-width:0;}
@@ -142,12 +136,20 @@
 
 <div class="wrap">
   <header class="masthead">
-    <div class="flame" aria-hidden="true"><span class="base"></span><span class="body"></span><span class="core"></span></div>
-    <p class="eyebrow">Arya Samaj · Daily Satsang</p>
-    <h1 class="title">आर्य सत्संग गुटका</h1>
-    <div class="romanized">Arya Satsang Gutka</div>
-    <p class="dek">गायत्री · वैदिक सन्ध्या · ईश्वरस्तुति–प्रार्थना–उपासना · स्वस्तिवाचन · शान्तिकरण · यज्ञ विधि · यज्ञ प्रार्थना · वैदिक प्रार्थनाएं · संगठन सूक्त · आर्यसमाज के नियम</p>
-    <div class="rule"></div>
+    <svg class="flame" viewBox="0 0 24 34" aria-hidden="true">
+      <defs>
+        <linearGradient id="flBody" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#FCE9A6"/><stop offset=".4" stop-color="#F2A93B"/>
+          <stop offset=".72" stop-color="#E5641C"/><stop offset="1" stop-color="#8E2D1B"/>
+        </linearGradient>
+        <linearGradient id="flCore" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#FFF6D8"/><stop offset="1" stop-color="#FFC861"/>
+        </linearGradient>
+      </defs>
+      <path class="fl-body" fill="url(#flBody)" d="M12 1 C 17 9 20 14 20 21 a 8 8 0 0 1 -16 0 C 4 14 8 9 12 1 Z"/>
+      <path class="fl-core" fill="url(#flCore)" d="M12 12 C 14.5 16 16 18.5 16 22 a 4 4 0 0 1 -8 0 C 8 18.5 10 16 12 12 Z"/>
+    </svg>
+    <h1 class="title">आर्य सत्संग गुटका <span class="romanized">· Arya Satsang Gutka</span></h1>
   </header>
 
   <nav class="toc" aria-label="विषय-सूची"><h2>विषय-सूची · Contents</h2><ol id="tocList"></ol></nav>
