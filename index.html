@@ -144,6 +144,12 @@
   .title .deva-only{display:inline;}
   body.lang-en .title .en-only{display:inline;}
   .title .en-only{font-family:"Marcellus",serif;letter-spacing:.04em;}
+  /* selected / current verse highlight */
+  details.node.is-current{border-color:var(--saffron);box-shadow:0 0 0 1px rgba(197,99,30,.22),0 3px 16px rgba(197,99,30,.10);}
+  details.node.is-current > summary .h-deva,details.node.is-current > summary .h-en{color:var(--ember);}
+  details.node.is-current > .body > .verse{border-left-color:var(--saffron);border-left-width:4px;background:linear-gradient(90deg,rgba(197,99,30,.13),rgba(176,134,58,.05) 72%);box-shadow:inset 0 0 0 1px rgba(197,99,30,.10);}
+  .verse::selection{background:#F7C56B;color:#2B211A;}
+  .verse ::selection{background:#F7C56B;color:#2B211A;}
 </style>
 </head>
 <body>
@@ -506,11 +512,16 @@ const allDetails = ()=>Array.from(document.querySelectorAll('details.node'));
 document.getElementById('expandAll').onclick = ()=>allDetails().forEach(d=>d.open=true);
 document.getElementById('collapseAll').onclick = ()=>allDetails().forEach(d=>d.open=false);
 
+function markCurrent(id){
+  var prev=document.querySelector('details.node.is-current'); if(prev) prev.classList.remove('is-current');
+  var cel=document.getElementById(id); if(cel) cel.classList.add('is-current');
+}
 function openTo(id){
   const el = document.getElementById(id); if(!el) return;
   let p = el; while(p && p.tagName){ if(p.tagName==='DETAILS') p.open=true; p=p.parentElement; }
   el.scrollIntoView({block:'center'});
   const s=el.querySelector('summary'); if(s){s.classList.add('target-glow');setTimeout(()=>s.classList.remove('target-glow'),1600);}
+  markCurrent(id);
 }
 document.addEventListener('click', e=>{
   const a = e.target.closest('a[href^="#"]'); if(!a) return;
@@ -611,6 +622,7 @@ function filterNode(d,q){
     var p=el; while(p&&p.tagName){ if(p.tagName==='DETAILS') p.open=true; p=p.parentElement; }
     el.scrollIntoView({block:'center'});
     var s=el.querySelector('summary'); if(s){s.classList.add('target-glow');setTimeout(function(){s.classList.remove('target-glow');},1600);}
+    if(typeof markCurrent==='function') markCurrent(id);
   }
   function update(){
     var en=document.body.classList.contains('lang-en');
@@ -630,6 +642,7 @@ function filterNode(d,q){
   // keep position in sync when the user opens a node, or uses the contents/anchor links
   document.getElementById('tree').addEventListener('click',function(e){
     var d=e.target.closest('details.node'); if(!d) return;
+    if(typeof markCurrent==='function') markCurrent(d.id);
     var idx=order.indexOf(d.id); if(idx>-1){ cur=idx; update(); }
   });
   document.addEventListener('click',function(e){
