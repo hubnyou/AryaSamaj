@@ -99,7 +99,12 @@
   .reader-nav button:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
   .reader-nav .nav-next{background:linear-gradient(160deg,var(--saffron),var(--ember));color:#fff;}
   .reader-nav .nav-next:hover:not(:disabled){filter:brightness(1.07);background:linear-gradient(160deg,var(--saffron),var(--ember));}
-  .reader-nav .nav-ind{font-family:"Marcellus",serif;font-size:.72rem;letter-spacing:.05em;color:var(--muted);min-width:56px;text-align:center;white-space:nowrap;}
+  .reader-nav .nav-ind{display:inline-flex;align-items:center;gap:4px;min-width:56px;justify-content:center;white-space:nowrap;}
+  .reader-nav .nav-sep,.reader-nav #navTotal{font-family:"Marcellus",serif;font-size:.72rem;letter-spacing:.05em;color:var(--muted);}
+  .reader-nav .nav-input{width:32px;text-align:center;font-family:"Marcellus",serif;font-size:.78rem;color:var(--ember);
+    background:#fff;border:1px solid var(--line);border-radius:7px;padding:3px 2px;outline:none;-moz-appearance:textfield;}
+  .reader-nav .nav-input:hover{border-color:var(--saffron);}
+  .reader-nav .nav-input:focus{border-color:var(--saffron);box-shadow:0 0 0 2px rgba(197,99,30,.16);}
   @media(max-width:400px){.reader-nav .nav-label{display:none;}.reader-nav button{padding:8px 12px;}}
 
   /* ---------- QR launcher + modal ---------- */
@@ -622,14 +627,15 @@ function filterNode(d,q){
 </script>
 <nav class="reader-nav" aria-label="क्रमशः नेविगेशन / Verse navigation">
   <button class="nav-prev" id="navPrev" aria-label="पिछला / Previous">&#8249; <span class="nav-label" id="navPrevLabel">पिछला</span></button>
-  <span class="nav-ind" id="navInd">– / –</span>
+  <span class="nav-ind"><input id="navInput" class="nav-input" type="text" inputmode="numeric" aria-label="क्रम संख्या / verse number" title="संख्या टाइप कर Enter दबाएँ / type a number and press Enter" value="–"><span class="nav-sep">/</span><span id="navTotal">–</span></span>
   <button class="nav-next" id="navNext" aria-label="अगला / Next"><span class="nav-label" id="navNextLabel">अगला</span> &#8250;</button>
 </nav>
 <script>
 (function(){
   var order = Array.prototype.slice.call(document.querySelectorAll('details.node')).map(function(n){return n.id;});
   var cur = -1;
-  var prevBtn=document.getElementById('navPrev'), nextBtn=document.getElementById('navNext'), ind=document.getElementById('navInd');
+  var prevBtn=document.getElementById('navPrev'), nextBtn=document.getElementById('navNext'),
+      navInput=document.getElementById('navInput'), navTotal=document.getElementById('navTotal');
   function reveal(id){
     var el=document.getElementById(id); if(!el) return;
     var p=el; while(p&&p.tagName){ if(p.tagName==='DETAILS') p.open=true; p=p.parentElement; }
@@ -640,9 +646,24 @@ function filterNode(d,q){
   function update(){
     var en=document.body.classList.contains('lang-en');
     var fmt=function(n){return en?String(n):(typeof toDevaDigits==='function'?toDevaDigits(n):String(n));};
-    ind.textContent=(cur<0?'–':fmt(cur+1))+' / '+fmt(order.length);
+    if(navInput && document.activeElement!==navInput) navInput.value=(cur<0?'–':fmt(cur+1));
+    if(navTotal) navTotal.textContent=fmt(order.length);
     prevBtn.disabled = cur<=0;
     nextBtn.disabled = cur>=order.length-1;
+  }
+  function fromDevaNum(s){return String(s).replace(/[०१२३४५६७८९]/g,function(d){return '०१२३४५६७८९'.indexOf(d);});}
+  function jumpToInput(){
+    var raw=fromDevaNum(navInput.value).replace(/[^0-9]/g,'');
+    if(raw===''){ update(); return; }
+    var nn=parseInt(raw,10);
+    if(isNaN(nn)){ update(); return; }
+    nn=Math.max(1,Math.min(order.length,nn));
+    cur=nn-1; reveal(order[cur]); update();
+  }
+  if(navInput){
+    navInput.addEventListener('focus',function(){ navInput.select(); });
+    navInput.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); jumpToInput(); navInput.blur(); } });
+    navInput.addEventListener('blur',jumpToInput);
   }
   function isHidden(id){var el=document.getElementById(id);return el&&el.classList.contains('hidden');}
   function step(dir){
