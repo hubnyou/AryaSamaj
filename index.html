@@ -141,6 +141,9 @@
   .langtog button{font-family:"Noto Sans Devanagari",sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;border:0;background:transparent;color:var(--muted);padding:8px 12px;transition:all .15s;white-space:nowrap;}
   .langtog button.lang-on{background:linear-gradient(160deg,var(--saffron),var(--ember));color:#fff;}
   .langtog button:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;}
+  .title .deva-only{display:inline;}
+  body.lang-en .title .en-only{display:inline;}
+  .title .en-only{font-family:"Marcellus",serif;letter-spacing:.04em;}
 </style>
 </head>
 <body>
@@ -176,10 +179,10 @@
       <path class="fl-body" fill="url(#flBody)" d="M12 1 C 17 9 20 14 20 21 a 8 8 0 0 1 -16 0 C 4 14 8 9 12 1 Z"/>
       <path class="fl-core" fill="url(#flCore)" d="M12 12 C 14.5 16 16 18.5 16 22 a 4 4 0 0 1 -8 0 C 8 18.5 10 16 12 12 Z"/>
     </svg>
-    <h1 class="title">आर्य सत्संग गुटका <span class="romanized">· Arya Satsang Gutka</span></h1>
+    <h1 class="title"><span class="deva-only">आर्य सत्संग गुटका</span><span class="en-only">Arya Satsang Gutka</span></h1>
   </header>
 
-  <nav class="toc" aria-label="विषय-सूची"><h2>विषय-सूची · Contents</h2><ol id="tocList"></ol></nav>
+  <nav class="toc" aria-label="विषय-सूची / Contents"><h2 id="tocHeading">विषय-सूची</h2><ol id="tocList"></ol></nav>
 
   <div class="toolbar" role="toolbar" aria-label="नियंत्रण">
     <div class="langtog" role="group" aria-label="भाषा / Language">
@@ -188,18 +191,20 @@
     </div>
     <label class="search">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6E5D4E" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-      <input id="search" type="search" placeholder="खोजें / Search…" aria-label="Search" autocomplete="off">
+      <input id="search" type="search" placeholder="खोजें…" aria-label="Search" autocomplete="off">
     </label>
-    <button class="btn" id="expandAll">सब खोलें · Expand all</button>
-    <button class="btn" id="collapseAll">सब बंद करें · Collapse</button>
+    <button class="btn" id="expandAll">सब खोलें</button>
+    <button class="btn" id="collapseAll">सब बंद करें</button>
     <span class="count" id="count"></span>
   </div>
 
   <main class="tree" id="tree" aria-label="आर्य सत्संग गुटका — वृक्ष रूप"></main>
 
   <footer>
-    <span class="om">ॐ शान्तिः शान्तिः शान्तिः</span>
-    मन्त्र वैदिक स्रोतों (यजुर्वेद, ऋग्वेद, अथर्ववेद आदि) से; अर्थ हिन्दी में। किसी अंश का <code>verse</code>/<code>gloss</code> सम्पादित कर अपनी मुद्रित गुटका से मिलान करें।
+    <span class="om deva-only">ॐ शान्तिः शान्तिः शान्तिः</span>
+    <span class="om en-only">Om Śāntiḥ Śāntiḥ Śāntiḥ</span>
+    <span class="deva-only">मन्त्र वैदिक स्रोतों (यजुर्वेद, ऋग्वेद, अथर्ववेद आदि) से; अर्थ हिन्दी में। किसी अंश का <code>verse</code>/<code>gloss</code> सम्पादित कर अपनी मुद्रित गुटका से मिलान करें।</span>
+    <span class="en-only">Mantras are drawn from the Vedic corpus (Yajurveda, Rigveda, Atharvaveda, etc.); meanings and transliterations are given in English. Edit any <code>verse</code> or <code>gloss</code> in the file to match your printed Gutka.</span>
   </footer>
 </div>
 
@@ -492,7 +497,10 @@ function escapeAttr(s){return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt
 
 tree.innerHTML = DATA.map(n=>nodeHTML(n,0)).join('');
 tocList.innerHTML = DATA.map(n=>`<li><a href="#${n.id}"><span class="deva-only">${n.deva}</span><span class="en-only">${(typeof EN!=="undefined"&&EN[n.id]&&EN[n.id].title)||n.rom||n.deva}</span></a></li>`).join('');
-document.getElementById('count').textContent = `${DATA.length} खण्ड`;
+function toDevaDigits(s){return String(s).replace(/[0-9]/g,function(d){return '०१२३४५६७८९'.charAt(+d);});}
+var countN = DATA.length, countResult = false;
+function renderCount(){var en=document.body.classList.contains('lang-en');var num = en ? String(countN) : toDevaDigits(countN);document.getElementById('count').textContent = num + ' ' + (countResult ? (en?'results':'परिणाम') : (en?'sections':'खण्ड'));}
+renderCount();
 
 const allDetails = ()=>Array.from(document.querySelectorAll('details.node'));
 document.getElementById('expandAll').onclick = ()=>allDetails().forEach(d=>d.open=true);
@@ -519,10 +527,10 @@ const search = document.getElementById('search');
 search.addEventListener('input', ()=>{
   const q = search.value.trim().toLowerCase();
   const top = Array.from(tree.children);
-  if(!q){ allDetails().forEach(d=>{d.classList.remove('hidden');d.open=false;}); document.getElementById('count').textContent=`${DATA.length} खण्ड`; return; }
+  if(!q){ allDetails().forEach(d=>{d.classList.remove('hidden');d.open=false;}); countN=DATA.length; countResult=false; renderCount(); return; }
   let hits=0;
   top.forEach(d=>{ const m=filterNode(d,q); d.classList.toggle('hidden',!m); if(m){d.open=true;hits++;} });
-  document.getElementById('count').textContent=`${hits} परिणाम`;
+  countN=hits; countResult=true; renderCount();
 });
 function filterNode(d,q){
   const text=(d.getAttribute('data-text')||'').toLowerCase();
@@ -534,14 +542,29 @@ function filterNode(d,q){
 // ----- language toggle -----
 (function(){
   var bDeva=document.getElementById('langDeva'), bEn=document.getElementById('langEn');
+  var L={
+    expandAll:['सब खोलें','Expand all'],
+    collapseAll:['सब बंद करें','Collapse all'],
+    tocHeading:['विषय-सूची','Contents'],
+    navPrevLabel:['पिछला','Prev'],
+    navNextLabel:['अगला','Next']
+  };
+  function txt(id,en){var el=document.getElementById(id);if(el)el.textContent=L[id][en?1:0];}
   function setLang(en){
     document.body.classList.toggle('lang-en', en);
     bEn.classList.toggle('lang-on', en); bDeva.classList.toggle('lang-on', !en);
     bEn.setAttribute('aria-pressed', en?'true':'false');
     bDeva.setAttribute('aria-pressed', en?'false':'true');
+    txt('expandAll',en); txt('collapseAll',en); txt('tocHeading',en);
+    txt('navPrevLabel',en); txt('navNextLabel',en);
+    var s=document.getElementById('search'); if(s) s.placeholder=en?'Search…':'खोजें…';
+    if(typeof renderCount==='function') renderCount();
+    document.dispatchEvent(new CustomEvent('langchange',{detail:{en:en}}));
   }
   bDeva.addEventListener('click', function(){ setLang(false); });
   bEn.addEventListener('click', function(){ setLang(true); });
+  window.__setLang=setLang;           // expose for re-init after later scripts load
+  setLang(false);                     // initialise labels (Hindi default)
 })();
 </script>
 
@@ -574,9 +597,9 @@ function filterNode(d,q){
 })();
 </script>
 <nav class="reader-nav" aria-label="क्रमशः नेविगेशन / Verse navigation">
-  <button class="nav-prev" id="navPrev" aria-label="पिछला / Previous">&#8249; <span class="nav-label">पिछला</span></button>
+  <button class="nav-prev" id="navPrev" aria-label="पिछला / Previous">&#8249; <span class="nav-label" id="navPrevLabel">पिछला</span></button>
   <span class="nav-ind" id="navInd">– / –</span>
-  <button class="nav-next" id="navNext" aria-label="अगला / Next"><span class="nav-label">अगला</span> &#8250;</button>
+  <button class="nav-next" id="navNext" aria-label="अगला / Next"><span class="nav-label" id="navNextLabel">अगला</span> &#8250;</button>
 </nav>
 <script>
 (function(){
@@ -590,7 +613,9 @@ function filterNode(d,q){
     var s=el.querySelector('summary'); if(s){s.classList.add('target-glow');setTimeout(function(){s.classList.remove('target-glow');},1600);}
   }
   function update(){
-    ind.textContent=(cur<0?'–':(cur+1))+' / '+order.length;
+    var en=document.body.classList.contains('lang-en');
+    var fmt=function(n){return en?String(n):(typeof toDevaDigits==='function'?toDevaDigits(n):String(n));};
+    ind.textContent=(cur<0?'–':fmt(cur+1))+' / '+fmt(order.length);
     prevBtn.disabled = cur<=0;
     nextBtn.disabled = cur>=order.length-1;
   }
@@ -616,8 +641,10 @@ function filterNode(d,q){
     var t=e.target; if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA')) return;
     if(e.key==='ArrowRight'){ step(1); } else if(e.key==='ArrowLeft'){ step(-1); }
   });
+  document.addEventListener('langchange', update);
   update();
 })();
 </script>
+<script>window.addEventListener('load',function(){if(window.__setLang)window.__setLang(document.body.classList.contains('lang-en'));});</script>
 </body>
 </html>
