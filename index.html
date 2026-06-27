@@ -33,8 +33,11 @@
   @media(max-width:430px){.romanized{display:none;}h1.title{font-size:1.35rem;}}
   .toolbar{position:sticky;top:0;z-index:20;display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:12px;margin:30px 0 14px;
     background:rgba(251,246,236,.88);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:14px;}
-  .search{flex:1 1 200px;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-width:0;}
-  .search input{border:0;outline:0;background:transparent;width:100%;font-family:inherit;font-size:.95rem;color:var(--ink);}
+  .search{flex:0 0 auto;display:flex;align-items:center;gap:0;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 9px;min-width:0;cursor:pointer;transition:flex-basis .2s ease;}
+  .search.open{flex:1 1 200px;gap:8px;padding:8px 12px;cursor:text;}
+  .search svg{flex:none;}
+  .search input{border:0;outline:0;background:transparent;width:0;opacity:0;pointer-events:none;font-family:inherit;font-size:.95rem;color:var(--ink);transition:width .2s ease,opacity .15s ease;}
+  .search.open input{width:100%;opacity:1;pointer-events:auto;}
   .btn{font-family:"Noto Sans Devanagari",sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 13px;border-radius:10px;transition:all .15s;white-space:nowrap;}
   .btn:hover{border-color:var(--saffron);color:var(--saffron);}
   .btn:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
@@ -60,7 +63,9 @@
   details.node details.node .body{padding-left:30px;}
   .body p{margin:.5em 0;}
   .verse{font-family:"Tiro Devanagari Hindi",serif;font-size:1.12rem;line-height:2;color:#3a2c20;white-space:pre-line;
-    border-left:3px solid var(--gold);background:linear-gradient(90deg,rgba(176,134,58,.06),transparent 60%);padding:12px 16px;border-radius:0 8px 8px 0;margin:10px 0;}
+    border-left:3px solid var(--gold);background:linear-gradient(90deg,rgba(176,134,58,.06),transparent 60%);padding:15px 22px;border-radius:0 8px 8px 0;margin:10px -17px 10px -41px;}
+  details.node details.node .verse{margin-left:-29px;margin-right:-17px;}
+  @media(max-width:520px){.verse{margin-left:-40px;margin-right:-15px;padding:13px 16px;}details.node details.node .verse{margin-left:-28px;}}
   .src{font-family:"Marcellus",serif;font-size:.72rem;letter-spacing:.08em;color:var(--saffron);margin:-2px 0 8px;text-transform:uppercase;}
   .gloss{color:var(--muted);font-size:.96rem;}
   .gloss.intro{margin-bottom:4px;}
@@ -191,16 +196,16 @@
   <nav class="toc" aria-label="विषय-सूची / Contents"><h2 id="tocHeading">विषय-सूची</h2><ol id="tocList"></ol></nav>
 
   <div class="toolbar" role="toolbar" aria-label="नियंत्रण">
-    <div class="langtog" role="group" aria-label="भाषा / Language">
-      <button id="langDeva" class="lang-on" aria-pressed="true">देवनागरी</button>
-      <button id="langEn" aria-pressed="false">English</button>
-    </div>
     <label class="search">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6E5D4E" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
       <input id="search" type="search" placeholder="खोजें…" aria-label="Search" autocomplete="off">
     </label>
     <button class="btn" id="expandAll">सब खोलें</button>
     <button class="btn" id="collapseAll">सब बंद करें</button>
+    <div class="langtog" role="group" aria-label="भाषा / Language">
+      <button id="langDeva" class="lang-on" aria-pressed="true" aria-label="हिन्दी / Devanagari" title="हिन्दी">Hi</button>
+      <button id="langEn" aria-pressed="false" aria-label="English" title="English">EN</button>
+    </div>
     <span class="count" id="count"></span>
   </div>
 
@@ -543,6 +548,14 @@ search.addEventListener('input', ()=>{
   top.forEach(d=>{ const m=filterNode(d,q); d.classList.toggle('hidden',!m); if(m){d.open=true;hits++;} });
   countN=hits; countResult=true; renderCount();
 });
+(function(){
+  var wrap=document.querySelector('.search');
+  function sync(){ if(document.activeElement===search || search.value.trim()) wrap.classList.add('open'); else wrap.classList.remove('open'); }
+  wrap.addEventListener('click', function(){ search.focus(); });
+  search.addEventListener('focus', function(){ wrap.classList.add('open'); });
+  search.addEventListener('blur', sync);
+  search.addEventListener('input', sync);
+})();
 function filterNode(d,q){
   const text=(d.getAttribute('data-text')||'').toLowerCase();
   let selfMatch=text.includes(q), childMatch=false;
@@ -554,8 +567,8 @@ function filterNode(d,q){
 (function(){
   var bDeva=document.getElementById('langDeva'), bEn=document.getElementById('langEn');
   var L={
-    expandAll:['सब खोलें','Expand all'],
-    collapseAll:['सब बंद करें','Collapse all'],
+    expandAll:['सब खोलें','Expand'],
+    collapseAll:['सब बंद करें','Collapse'],
     tocHeading:['विषय-सूची','Contents'],
     navPrevLabel:['पिछला','Prev'],
     navNextLabel:['अगला','Next']
