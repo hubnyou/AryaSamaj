@@ -83,6 +83,20 @@
   footer .om{font-family:"Tiro Devanagari Hindi",serif;font-size:1.4rem;color:var(--ember);display:block;margin-bottom:6px;}
   @media(prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important;}html{scroll-behavior:auto;}}
 
+  /* ---------- Reader Prev/Next nav ---------- */
+  .reader-nav{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:4px;
+    background:rgba(251,246,236,.95);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:15px;padding:6px;
+    box-shadow:0 8px 26px rgba(43,33,26,.24);}
+  .reader-nav button{font-family:"Noto Sans Devanagari",sans-serif;font-weight:600;font-size:.85rem;cursor:pointer;border:0;
+    background:transparent;color:var(--ember);padding:8px 14px;border-radius:10px;display:flex;align-items:center;gap:6px;transition:background .15s,color .15s,filter .15s;}
+  .reader-nav button:hover:not(:disabled){background:#fff;}
+  .reader-nav button:disabled{color:var(--muted);opacity:.4;cursor:default;}
+  .reader-nav button:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+  .reader-nav .nav-next{background:linear-gradient(160deg,var(--saffron),var(--ember));color:#fff;}
+  .reader-nav .nav-next:hover:not(:disabled){filter:brightness(1.07);background:linear-gradient(160deg,var(--saffron),var(--ember));}
+  .reader-nav .nav-ind{font-family:"Marcellus",serif;font-size:.72rem;letter-spacing:.05em;color:var(--muted);min-width:56px;text-align:center;white-space:nowrap;}
+  @media(max-width:400px){.reader-nav .nav-label{display:none;}.reader-nav button{padding:8px 12px;}}
+
   /* ---------- QR launcher + modal ---------- */
   .qr-fab{position:fixed;top:14px;right:16px;z-index:60;width:46px;height:46px;border-radius:13px;cursor:pointer;
     display:grid;place-items:center;border:1px solid var(--line);
@@ -114,6 +128,19 @@
     background:#fff;color:var(--muted);cursor:pointer;font-size:1.1rem;line-height:1;display:grid;place-items:center;}
   .qr-close:hover{color:var(--ember);border-color:var(--saffron);}
   .qr-close:focus-visible,.qr-actions a:focus-visible,.qr-actions button:focus-visible{outline:2px solid var(--focus);outline-offset:2px;}
+
+  /* ---------- Language toggle ---------- */
+  .en-only{display:none;}
+  body.lang-en .deva-only{display:none;}
+  body.lang-en .en-only{display:block;}
+  body.lang-en .toc a .en-only,body.lang-en .h-en,body.lang-en .h-rom.en-only{display:inline;}
+  .h-en{font-family:"Marcellus",serif;font-size:1.02rem;color:var(--ink);font-weight:400;line-height:1.4;letter-spacing:.01em;}
+  details.node details.node .h-en{font-size:.95rem;}
+  .verse.translit{font-family:"Spectral",Georgia,serif;font-size:1.02rem;line-height:1.85;font-style:normal;color:#3a2c20;}
+  .langtog{display:inline-flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;flex:none;}
+  .langtog button{font-family:"Noto Sans Devanagari",sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;border:0;background:transparent;color:var(--muted);padding:8px 12px;transition:all .15s;white-space:nowrap;}
+  .langtog button.lang-on{background:linear-gradient(160deg,var(--saffron),var(--ember));color:#fff;}
+  .langtog button:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;}
 </style>
 </head>
 <body>
@@ -155,6 +182,10 @@
   <nav class="toc" aria-label="विषय-सूची"><h2>विषय-सूची · Contents</h2><ol id="tocList"></ol></nav>
 
   <div class="toolbar" role="toolbar" aria-label="नियंत्रण">
+    <div class="langtog" role="group" aria-label="भाषा / Language">
+      <button id="langDeva" class="lang-on" aria-pressed="true">देवनागरी</button>
+      <button id="langEn" aria-pressed="false">English</button>
+    </div>
     <label class="search">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6E5D4E" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
       <input id="search" type="search" placeholder="खोजें / Search…" aria-label="Search" autocomplete="off">
@@ -173,6 +204,7 @@
 </div>
 
 <script>
+const EN = {"gayatri-gayan": {"gloss": "Gayatri singing and the opening invocation at the start of the satsang."}, "gayatri-kavya": {"verse": "Om bhūr bhuvaḥ svaḥ. tat savitur vareṇyam.\nbhargo devasya dhīmahi. dhiyo yo naḥ pracodayāt.", "gloss": "You created us and You sustain us; from You alone we receive our life, and You take away our sorrow and pain. Your great radiance fills every place; in each and every thing of creation You abide. On You alone we fix our meditation and seek Your grace — O God, lead our intellect onto the noblest path."}, "udbodhan": {"html": "<p class=\"gloss\"><b>O Supreme Father, Supreme Being!</b> Today, humbled by devotion, we have come to Your feet. Holding You in our hearts, we make our mind and soul pure. Taking refuge in You, we wish to wash away our faults. O Friend of the lowly, Ocean of mercy! Keeping faith and trust in You, may we by Your grace cross this ocean of worldly life in peace.</p><p class=\"gloss\"><b>O Being of Truth, Consciousness and Bliss!</b> With a sinless mind we have gathered here to pray to and worship You. Grant us right understanding; show us the right path; inspire us toward righteous action.</p>"}, "vaidik-sandhya": {"gloss": "The eleven ordered steps of the morning and evening worship (Sandhya)."}, "s-gayatri": {"verse": "Om bhūr bhuvaḥ svaḥ. tat savitur vareṇyaṃ bhargo devasya dhīmahi. dhiyo yo naḥ pracodayāt.", "gloss": "O God, You are Existence, Consciousness and Bliss. We take into ourselves the supreme radiance of that Deva, the creator of the universe. May He inspire our intellect onto the right path."}, "s-aachman": {"verse": "Om śaṃ no devīr abhiṣṭaya āpo bhavantu pītaye. śaṃ yor abhi sravantu naḥ.", "gloss": "O God, may the divine waters be for our welfare, for the fulfilment of our wishes and for our satisfaction; may they shower well-being upon us."}, "s-angsparsh": {"verse": "Om vāk vāk. Om prāṇaḥ prāṇaḥ. Om cakṣuḥ cakṣuḥ. Om śrotram śrotram. Om nābhiḥ. Om hṛdayam. Om kaṇṭhaḥ. Om śiraḥ. Om bāhubhyāṃ yaśobalam. Om karatalakarapṛṣṭhe.", "gloss": "O God, may my speech, breath, eyes, ears, navel, heart, throat and head be pure and strong. May there be glory and strength in both my arms; may my palms and the backs of my hands be pure."}, "s-marjan": {"verse": "Om bhūḥ punātu śirasi. Om bhuvaḥ punātu netrayoḥ. Om svaḥ punātu kaṇṭhe. Om mahaḥ punātu hṛdaye. Om janaḥ punātu nābhyām. Om tapaḥ punātu pādayoḥ. Om satyaṃ punātu punaḥ śirasi. Om khaṃ brahma punātu sarvatra.", "gloss": "O God — source of life, remover of sorrow, embodiment of bliss, the great, the creator, the form of knowledge, truth, and all-pervading — purify my head, eyes, throat, heart, navel, feet and every limb."}, "s-pranayam": {"verse": "Om bhūḥ. Om bhuvaḥ. Om svaḥ. Om mahaḥ. Om janaḥ. Om tapaḥ. Om satyam.", "gloss": "O God, You are the form of life-breath, the remover of sorrow, the embodiment of bliss, the great, the creator, the form of knowledge and of truth."}, "s-aghamarshan": {"verse": "Om ṛtaṃ ca satyaṃ cābhīddhāt tapaso 'dhyajāyata. tato rātry ajāyata tataḥ samudro arṇavaḥ. (1)\nOm samudrād arṇavād adhi saṃvatsaro ajāyata. ahorātrāṇi vidadhad viśvasya miṣato vaśī. (2)\nOm sūryācandramasau dhātā yathāpūrvam akalpayat. divaṃ ca pṛthivīṃ cāntarikṣam atho svaḥ. (3)", "gloss": "From the blazing radiance of knowledge-tapas arose cosmic order (ṛta) and truth; then came night and the subtle ocean of waters. From that ocean arose the year; the Lord, controller of the moving universe, ordained day and night, and as before fashioned the sun and moon, heaven, earth, the mid-region and all the worlds."}, "s-parikrama": {"verse": "Om prācī dig agnir adhipatir asito rakṣitādityā iṣavaḥ. tebhyo namo 'dhipatibhyo namo rakṣitṛbhyo nama iṣubhyo nama ebhyo astu. yo 'smān dveṣṭi yaṃ vayaṃ dviṣmas taṃ vo jambhe dadhmaḥ. (1, East)\nSouth — adhipati Indra … (as before) (2)\nWest — adhipati Varuṇa … (as before) (3)\nNorth — adhipati Soma … (as before) (4)\nNadir — adhipati Viṣṇu … (as before) (5)\nZenith — adhipati Bṛhaspati … (as before) (6)", "gloss": "The ruler of the East is the radiant Lord, of the South Indra, of the West Varuṇa, of the North Soma, of the nadir Viṣṇu, of the zenith Bṛhaspati — a remembrance of God's presence in every direction, with salutation to each. Whoever hates us, and whomever we oppose, we place in Your jaws of justice."}, "s-upasthan": {"verse": "Om ud vayaṃ tamasas pari svaḥ paśyanta uttaram. devaṃ devatrā sūryam aganma jyotir uttamam. (1)\nOm udu tyaṃ jātavedasaṃ devaṃ vahanti ketavaḥ. dṛśe viśvāya sūryam. (2)\nOm citraṃ devānām udagād anīkaṃ cakṣur mitrasya varuṇasyāgneḥ. ā prā dyāvāpṛthivī antarikṣaṃ sūrya ātmā jagatas tasthuṣaś ca svāhā. (3)\nOm tac cakṣur devahitaṃ purastāc chukram uccarat. paśyema śaradaḥ śataṃ jīvema śaradaḥ śataṃ śṛṇuyāma … adīnāḥ syāma śaradaḥ śatam. (4)\nOm bhūr bhuvaḥ svaḥ. tat savitur vareṇyaṃ bhargo devasya dhīmahi. dhiyo yo naḥ pracodayāt. (5)", "gloss": "Rising above darkness, may we attain the supreme Light. He is the seer of all and the benefactor of the righteous — may we behold Him, live, hear and praise Him for a hundred years and more, free of all want; may He inspire our intellect onto the right path."}, "s-samarpan": {"verse": "Om he īśvara dayānidhe! bhavat-kṛpayā anena japopāsanādi-karmaṇā dharmārtha-kāma-mokṣāṇāṃ sadyaḥ siddhir bhaven naḥ.", "gloss": "O God, Treasury of compassion! By Your grace, through this worship and meditation, may we swiftly attain dharma (righteousness), artha (prosperity), kāma (right desire) and mokṣa (liberation)."}, "s-namaskar": {"verse": "Om namaḥ śambhavāya ca mayobhavāya ca namaḥ śaṅkarāya ca mayaskarāya ca namaḥ śivāya ca śivatarāya ca.", "gloss": "The Lord is the embodiment of joy and giver of the highest happiness; the doer of good and giver of the bliss of liberation; supremely auspicious. To that Lord we bow again and again."}, "ishwar-stuti": {"gloss": "Eight celebrated Vedic mantras of praise, prayer and worship."}, "is-1": {"verse": "Om viśvāni deva savitar duritāni parāsuva. yad bhadraṃ tan na āsuva.", "gloss": "O God, creator of the world, drive away all our vices and bestow upon us whatever is good."}, "is-2": {"verse": "Om hiraṇyagarbhaḥ samavartatāgre bhūtasya jātaḥ patir eka āsīt. sa dādhāra pṛthivīṃ dyām utemāṃ kasmai devāya haviṣā vidhema.", "gloss": "The creator of the sun and all things, who was from the very beginning, is the one Lord of the whole universe; He upholds this earth and heaven. Let us worship that blissful Deva with our devotion."}, "is-3": {"verse": "Om ya ātmadā baladā yasya viśva upāsate praśiṣaṃ yasya devāḥ. yasya chāyāmṛtaṃ yasya mṛtyuḥ kasmai devāya haviṣā vidhema.", "gloss": "He who gives the soul its strength, whose command all bright powers obey, whose grace is immortality and whose disregard is death — let us worship that blissful Deva with devotion."}, "is-4": {"verse": "Om yaḥ prāṇato nimiṣato mahitvaika id rājā jagato babhūva. ya īśe asya dvipadaś catuṣpadaḥ kasmai devāya haviṣā vidhema.", "gloss": "He who by His greatness became the one king of this living, breathing world, the Lord of bipeds and quadrupeds — let us worship that blissful Deva with devotion."}, "is-5": {"verse": "Om yena dyaur ugrā pṛthivī ca dṛḍhā yena svaḥ stabhitaṃ yena nākaḥ. yo antarikṣe rajaso vimānaḥ kasmai devāya haviṣā vidhema.", "gloss": "By whom the mighty heaven and firm earth, the realm of light and of liberation are upheld, who sustains the worlds in space — let us worship that blissful Deva with devotion."}, "is-6": {"verse": "Om prajāpate na tvad etāny anyo viśvā jātāni pari tā babhūva. yat kāmās te juhumas tan no astu vayaṃ syāma patayo rayīṇām.", "gloss": "O Lord of creatures! None but You encompasses all these created things. May the desire with which we worship You be fulfilled, and may we become masters of true wealth."}, "is-7": {"verse": "Om sa no bandhur janitā sa vidhātā dhāmāni veda bhuvanāni viśvā. yatra devā amṛtam ānaśānās tṛtīye dhāmann adhyairayanta.", "gloss": "He is our kinsman, father and creator; He knows all places and all worlds. In Him the bright ones, partaking of immortality, dwell in the highest abode."}, "is-8": {"verse": "Om agne naya supathā rāye asmān viśvāni deva vayunāni vidvān. yuyodhy asmaj juhurāṇam eno bhūyiṣṭhāṃ te nama uktiṃ vidhema.", "gloss": "O radiant God, knower of all our deeds, lead us by the good path to prosperity; keep far from us all crooked sin. To You we offer our fullest words of homage."}, "swasti-vachan": {"verse": "Om agnim īḷe purohitaṃ yajñasya devam ṛtvijam. hotāraṃ ratnadhātamam. (1)\nsa naḥ piteva sūnave 'gne sūpāyano bhava. sacasvā naḥ svastaye. (2)\nsvasti no mimītām aśvinā bhagaḥ svasti devy aditir anarvaṇaḥ. svasti pūṣā asuro dadhātu naḥ svasti dyāvāpṛthivī sucetunā. (3)\nsvastaye vāyum upa bravāmahai somaṃ svasti bhuvanasya yas patiḥ. bṛhaspatiṃ sarvagaṇaṃ svastaye svastaya ādityāso bhavantu naḥ. (4)\nviśve devā no adyā svastaye vaiśvānaro vasur agniḥ svastaye. devā avantv ṛbhavaḥ svastaye svasti no rudraḥ pātv aṃhasaḥ. (5)\nsvasti mitrāvaruṇā svasti pathye revati. svasti na indraś cāgniś ca svasti no adite kṛdhi. (6)\nsvasti panthām anu carema sūryācandramasāv iva. punar dadatāghnatā jānatā saṃ gamemahi. (7)\nye devānāṃ yajñiyā yajñiyānāṃ manor yajatrā amṛtā ṛtajñāḥ. te no rāsantām urugāyam adya yūyaṃ pāta svastibhiḥ sadā naḥ. (8)", "gloss": "We praise God, the foremost, adorable, the bestower of treasures. O Lord, be as easily approachable to us as a father to his son, and dwell with us for our welfare. May all the divine powers grant us well-being; may we walk the path of welfare like the sun and the moon; and may the wise and righteous ever protect us with their blessings."}, "shanti-karan": {"verse": "Om śaṃ na indrāgnī bhavatām avobhiḥ śaṃ na indrāvaruṇā rātahavyā. śam indrāsomā suvitāya śaṃ yoḥ śaṃ na indrāpūṣaṇā vājasātau. (1)\nśaṃ no bhagaḥ śam u naḥ śaṃso astu śaṃ naḥ purandhiḥ śam u santu rāyaḥ. śaṃ naḥ satyasya suyamasya śaṃsaḥ śaṃ no aryamā purujāto astu. (2)\nśaṃ no dhātā śam u dhartā no astu śaṃ na urūcī bhavatu svadhābhiḥ. śaṃ rodasī bṛhatī śaṃ no adriḥ śaṃ no devānāṃ suhavāni santu. (3)\nśaṃ no agnir jyotir anīko astu śaṃ no mitrāvaruṇāv aśvinā śam. śaṃ naḥ sukṛtāṃ sukṛtāni santu śaṃ na iṣiro abhi vātu vātaḥ. (4)\nśaṃ no dyāvāpṛthivī pūrvahūtau śam antarikṣaṃ dṛśaye no astu. śaṃ na oṣadhīr vanino bhavantu śaṃ no rajasas patir astu jiṣṇuḥ. (5)\nśaṃ na indro vasubhir devo astu śam ādityebhir varuṇaḥ suśaṃsaḥ. śaṃ no rudro rudrebhir jalāṣaḥ śaṃ nas tvaṣṭā gnābhir iha śṛṇotu. (6)\nśaṃ naḥ somo bhavatu brahma śaṃ naḥ śaṃ no grāvāṇaḥ śam u santu yajñāḥ. śaṃ naḥ svarūṇāṃ mitayo bhavantu śaṃ naḥ prasvaḥ śam v astu vediḥ. (7)", "gloss": "May Indra and Agni, Varuṇa and Soma, Bhaga, the Sustainer, heaven and earth, the herbs and plants, the sacrifice and the altar — may all of these, in every form, be a source of peace and welfare to us."}, "yajna-vidhi": {"gloss": "The complete order of the fire-offering (Havan) — from the sipping of water to the final full oblation and Vasor-dhara."}, "y-aachman": {"verse": "Om amṛtopastaraṇam asi svāhā. (1)\nOm amṛtāpidhānam asi svāhā. (2)\nOm satyaṃ yaśaḥ śrīr mayi śrīḥ śrayatāṃ svāhā. (3)", "gloss": "O immortal Lord, You are our resting support; You are our protector and covering; may truth, glory and prosperity abide in me. (Sip water thrice with these.)"}, "y-angsparsh": {"verse": "Om vāṅ ma āsye 'stu. Om nasor me prāṇo 'stu. Om akṣṇor me cakṣur astu. Om karṇayor me śrotram astu. Om bāhvor me balam astu. Om ūrvor me ojo 'stu. Om ariṣṭāni me 'ṅgāni tanūs tanvā me saha santu.", "gloss": "O God, may there be the power of speech in my mouth, breath in my nostrils, sight in my eyes, hearing in my ears, strength in my arms and vigour in my thighs; may all my limbs be sound and full of strength."}, "y-agnyadhan": {"verse": "Om bhūr bhuvaḥ svaḥ.\nOm bhūr bhuvaḥ svar dyaur iva bhūmnā pṛthivīva varimṇā. tasyās te pṛthivi devayajani pṛṣṭhe 'gnim annādam annādyāyādadhe.\nOm ud budhyasvāgne prati jāgṛhi tvam iṣṭāpūrte saṃ sṛjethām ayaṃ ca. asmin sadhasthe 'dhy uttarasmin viśve devā yajamānaś ca sīdata.", "gloss": "O Earth, vast as the heavens and broad as the ground, upon you the sacrifices are performed; for the increase of food we set upon you the fire that consumes the offerings. O Agni, awaken and be watchful; may we accomplish our worship and good works; let all the wise and the worshippers be seated in their proper places at this sacrifice."}, "y-samidha": {"verse": "Om ayan ta idhma ātmā jātavedas tenedhyasva vardhasva ced dha vardhaya cāsmān prajayā paśubhir brahmavarcasenānnādyena samedhaya svāhā. idam agnaye jātavedase — idaṃ na mama. (1)\nOm samidhāgniṃ duvasyata ghṛtair bodhayatātithim. āsmin havyā juhotana. (2)\nOm susamiddhāya śociṣe ghṛtaṃ tīvraṃ juhotana. agnaye jātavedase svāhā. idam agnaye jātavedase — idaṃ na mama.\nOm taṃ tvā samidbhir aṅgiro ghṛtena vardhayāmasi. bṛhac chocā yaviṣṭhya svāhā. idam agnaye 'ṅgirase — idaṃ na mama. (3)", "gloss": "O all-knowing Agni, this fuel is your very self; be kindled by it and grow, and make us flourish with progeny, cattle, spiritual lustre and abundance of food. These offerings we make not for ourselves but for the good of all beings."}, "y-panch-ajya": {"verse": "Om ayan ta idhma ātmā jātavedas tenedhyasva vardhasva ced dha vardhaya cāsmān prajayā paśubhir brahmavarcasenānnādyena samedhaya svāhā. idam agnaye jātavedase — idaṃ na mama.", "gloss": "Recite the above mantra five times, offering five oblations of clarified butter (ghee)."}, "y-jalprokshan": {"verse": "Om adite 'numanyasva. (East)\nOm anumate 'numanyasva. (West)\nOm sarasvaty anumanyasva. (North)\nOm deva savitaḥ prasuva yajñaṃ prasuva yajñapatiṃ bhagāya. divyo gandharvaḥ ketapūḥ ketaṃ naḥ punātu vācas patir vācaṃ naḥ svadatu. (all around)", "gloss": "O imperishable Power, O Anumati, O Sarasvatī — grant us leave for this act. O inspiring Lord, urge the sacrifice and the worshipper toward prosperity; purify our understanding and sweeten our speech. (Sprinkle water in the directions.)"}, "y-char-ajya": {"verse": "Om agnaye svāhā. idam agnaye — idaṃ na mama. (North)\nOm somāya svāhā. idaṃ somāya — idaṃ na mama. (South)\nOm prajāpataye svāhā. idaṃ prajāpataye — idaṃ na mama. (centre)\nOm indrāya svāhā. idam indrāya — idaṃ na mama. (centre)", "gloss": "Offerings to Agni, Soma, Prajāpati and Indra — these are for them, not for me."}, "y-vishesh": {"verse": "Om bhūr agnaye svāhā. idam agnaye — idaṃ na mama.\nOm bhuvar vāyave svāhā. idaṃ vāyave — idaṃ na mama.\nOm svar ādityāya svāhā. idam ādityāya — idaṃ na mama.\nOm bhūr bhuvaḥ svar agni-vāyv-ādityebhyaḥ svāhā. idam agni-vāyv-ādityebhyaḥ — idaṃ na mama.", "gloss": "O God of Existence, Consciousness and Bliss — these offerings are for Agni (fire), Vāyu (air) and Āditya (sun); they are for them, not for me."}, "y-svishtakrit": {"verse": "Om yad asya karmaṇo 'tyarīric yad vā nyūnam ihākaram. agniṣ ṭat sviṣṭakṛd vidyāt sarvaṃ sviṣṭaṃ suhutaṃ karotu me. agnaye sviṣṭakṛte suhutahute sarvaprāyaścittāhutīnāṃ kāmānāṃ samardhayitre sarvān naḥ kāmān samardhaya svāhā. idam agnaye sviṣṭakṛte — idaṃ na mama.", "gloss": "O God, whatever in this rite I have done in excess or left wanting, may Agni make it complete and well-offered, and fulfil all our noble desires."}, "y-prajapatya": {"verse": "Om prajāpataye svāhā. idaṃ prajāpataye — idaṃ na mama.", "gloss": "This offering is for Prajāpati — it is for Him, not for me. (Offer one oblation, reciting silently.)"}, "y-ajyahutaya": {"verse": "Om bhūr bhuvaḥ svaḥ. agna āyūṃṣi pavasa ā suvorjam iṣaṃ ca naḥ. āre bādhasva ducchunāṃ svāhā. idam agnaye pavamānāya — idaṃ na mama. (1)\nOm … agnir ṛṣiḥ pavamānaḥ pāñcajanyaḥ purohitaḥ. tam īmahe mahāgayaṃ svāhā. (2)\nOm … agne pavasva svapā asme varcaḥ suvīryam. dadhad rayiṃ mayi poṣaṃ svāhā. (3)\nOm … prajāpate na tvad etāny anyo viśvā jātāni pari tā babhūva. yat kāmās te juhumas tan no astu vayaṃ syāma patayo rayīṇāṃ svāhā. (4)", "gloss": "O fiery Lord, purify our life; grant us strength and food, and drive away ill-will. O Lord of creatures, none but You masters this universe; may the desire with which we worship You be fulfilled, and may we become masters of true wealth."}, "y-ashta-ajya": {"verse": "Om tvaṃ no agne varuṇasya vidvān devasya heḷo 'va yāsisīṣṭhāḥ. yajiṣṭho vahnitamaḥ śośucāno viśvā dveṣāṃsi pra mumugdhy asmat svāhā. (1)\nOm sa tvaṃ no agne 'vamo bhavotī nediṣṭho asyā uṣaso vyuṣṭau. ava yakṣva no varuṇaṃ rarāṇo vīhi mṛḷīkaṃ suhavo na edhi svāhā. (2)\nOm imaṃ me varuṇa śrudhī havam adyā ca mṛḷaya. tvām avasyur ā cake svāhā. (3)\nOm tat tvā yāmi brahmaṇā vandamānas tad āśāste yajamāno havirbhiḥ. aheḷamāno varuṇeha bodhy uruśaṃsa mā na āyuḥ pra moṣīḥ svāhā. (4)\nOm ye te śataṃ varuṇa ye sahasraṃ yajñiyāḥ pāśā vitatā mahāntaḥ. tebhir no 'dya savitota viṣṇur viśve muñcantu marutaḥ svarkāḥ svāhā. (5)\nOm ayāś cāgne 'sy anabhiśastipāś ca satyam it tvam ayāsi. ayā no yajñaṃ vahāsy ayā no dhehi bheṣajaṃ svāhā. (6)\nOm ud uttamaṃ varuṇa pāśam asmad avādhamaṃ vi madhyamaṃ śrathāya. athā vayam āditya vrate tavānāgaso aditaye syāma svāhā. (7)\nOm bhavataṃ naḥ samanasau sacetasāv arepasau. mā yajñaṃ hiṃsiṣṭaṃ mā yajñapatiṃ jātavedasau śivau bhavatam adya naḥ svāhā. (8)", "gloss": "O Agni, keep the wrath of Varuṇa far from us; carry our sacrifice to the bright ones; remove all hatred and grant us health and healing. O Varuṇa, loosen for us your great, middle and small bonds; observing your eternal laws, may we remain sinless."}, "y-pratah": {"verse": "Om sūryo jyotir jyotiḥ sūryaḥ svāhā. (1)\nOm sūryo varco jyotir varcaḥ svāhā. (2)\nOm jyotiḥ sūryaḥ sūryo jyotiḥ svāhā. (3)\nOm sajūr devena savitrā sajūr uṣasendravatyā juṣāṇaḥ sūryo vetu svāhā. (4)", "gloss": "The sun is light and radiance. May the sun, together with the inspiring Savitā and the radiant dawn, come to this sacrifice and take delight in it. (Morning oblations.)"}, "y-sayam": {"verse": "Om agnir jyotir jyotir agniḥ svāhā. (1)\nOm agnir varco jyotir varcaḥ svāhā. (2)\nOm agnir jyotir jyotir agniḥ svāhā. (3)\nOm sajūr devena savitrā sajū rātryendravatyā juṣāṇo 'gnir vetu svāhā. (4)", "gloss": "Fire is light and radiance. May Agni, together with the inspiring Savitā and the bright night, come to this sacrifice and take delight in it. (Evening oblations.)"}, "y-dainik": {"verse": "Om bhūr agnaye prāṇāya svāhā. idam agnaye prāṇāya — idaṃ na mama. (1)\nOm bhuvar vāyave 'pānāya svāhā. idaṃ vāyave 'pānāya — idaṃ na mama. (2)\nOm svar ādityāya vyānāya svāhā. idam ādityāya vyānāya — idaṃ na mama. (3)\nOm bhūr bhuvaḥ svar agni-vāyv-ādityebhyaḥ prāṇāpāna-vyānebhyaḥ svāhā. (4)\nOm āpo jyotī raso 'mṛtaṃ brahma bhūr bhuvaḥ svar oṃ svāhā. (5)\nOm yāṃ medhāṃ devagaṇāḥ pitaraś copāsate. tayā mām adya medhayāgne medhāvinaṃ kuru svāhā. (6)\nOm viśvāni deva savitar duritāni parāsuva. yad bhadraṃ tan na āsuva svāhā. (7)\nOm agne naya supathā rāye asmān … te nama uktiṃ vidhema svāhā. (8)\nOm bhūr bhuvaḥ svaḥ. tat savitur vareṇyaṃ bhargo devasya dhīmahi. dhiyo yo naḥ pracodayāt svāhā. (9 — offer thrice)\nOm tryambakaṃ yajāmahe sugandhiṃ puṣṭivardhanam. urvārukam iva bandhanān mṛtyor mukṣīya māmṛtāt.", "gloss": "God is Existence, Consciousness and Bliss, and of the form of Om. These are offerings to Agni, Vāyu and Āditya, corresponding to the prāṇa, apāna and vyāna breaths. O Lord, make me wise with true intellect; remove my faults and bestow good; lead me on the right path. As the ripe cucumber drops easily from its stalk, free me from death and disease and grant me the nectar of life."}, "y-poornahuti": {"verse": "Om sarvaṃ vai pūrṇaṃ svāhā.", "gloss": "May all become full and complete — recite three times and offer the oblation. (The Full Oblation.)"}, "y-vasordhara": {"verse": "Om vasoḥ pavitram asi śatadhāraṃ vasoḥ pavitram asi sahasradhāram. devas tvā savitā punātu vasoḥ pavitreṇa śatadhāreṇa supvā kāmadhukṣaḥ svāhā.\nOm tejo 'si tejo mayi dhehi. Om vīryam asi vīryaṃ mayi dhehi. Om balam asi balaṃ mayi dhehi. Om ojo 'sy ojo mayi dhehi. Om manyur asi manyuṃ mayi dhehi. Om saho 'si saho mayi dhehi.", "gloss": "The final, continuous stream of ghee (Vasor-dhara). The thought: whatever zeal and sacrifice we begin a task with, may it grow even greater at the end. O God, You are the form of splendour, vigour, strength, energy, ardour and victory — bestow them all upon us."}, "yajna-prarthna": {"verse": "O Lord, embodiment of yajña, make our intentions bright; may we give up deceit — grant us strength of mind. (1)\nMay we speak the Veda's hymns and hold to truth; may all be immersed in joy and cross the sea of sorrow. (2)\nMay we perform great selfless works of service, upholding dharma and bringing benefit to the world. (3)\nWith faith and devotion may we ever perform yajña, and so relieve the suffering of an afflicted world. (4)\nMay the thought of sin and cruelty leave the mind; through yajña may the noble wishes of all be fulfilled. (5)\nMay the offering bring benefit to every living being; may air and water everywhere become pure and fragrant. (6)\nMay our selfishness dissolve and the path of love widen; may 'idaṃ na mama' — 'this is not mine' — live in every act. (7)\nWith folded hands and bowed heads we offer our prayer; O merciful Lord, may Your compassion rest upon all. (8)", "gloss": ""}, "vaidik-prarthna": {"gloss": "The closing prayers of the satsang."}, "vp-sarve": {"verse": "Om sarve bhavantu sukhinaḥ sarve santu nirāmayāḥ.\nsarve bhadrāṇi paśyantu mā kaścid duḥkhabhāg bhavet.", "gloss": "May all be happy; may all be free from illness; may all see what is good; may none suffer sorrow."}, "vp-tvameva": {"verse": "Om tvam eva mātā ca pitā tvam eva tvam eva bandhuś ca sakhā tvam eva.\ntvam eva vidyā draviṇaṃ tvam eva tvam eva sarvaṃ mama deva deva.\ntvam ekaṃ śaraṇyaṃ tvam ekaṃ vareṇyam. tvam ekaṃ jagat-pālakaṃ svaprakāśam.\nnamas te sate te jagat-kāraṇāya. namas te cite sarva-lokāśrayāya.\nnamo 'dvaita-tattvāya mukti-pradāya. namo brahmaṇe vyāpine śāśvatāya.", "gloss": "O God! You alone are my mother and father; You alone are my kinsman and friend; You alone are knowledge and wealth; You alone are my all, O God of gods. To the one refuge, the self-luminous protector of the world, the non-dual Reality, the giver of liberation, the all-pervading and eternal Brahman — salutations."}, "vp-purnamadah": {"verse": "Om pūrṇam adaḥ pūrṇam idaṃ pūrṇāt pūrṇam udacyate.\npūrṇasya pūrṇam ādāya pūrṇam evāvaśiṣyate.", "gloss": "That is whole, this is whole; from the whole the whole proceeds; taking the whole from the whole, the whole alone yet remains."}, "vp-tanupa": {"verse": "Om tanūpā agne 'si tanvaṃ me pāhi.\nOm āyurdā agne 'sy āyur me dehi.\nOm varcodā agne 'si varco me dehi.\nOm agne yan me tanvā ūnaṃ tan ma āpṛṇa.", "gloss": "O fiery Lord, protector of the body, guard my body; giver of life, grant me life; giver of lustre, grant me lustre; whatever is deficient in my body, make it complete."}, "vp-medha": {"verse": "Om medhāṃ me devaḥ savitā ādadhātu.\nOm medhāṃ me devī sarasvatī ādadhātu.\nOm medhāṃ me aśvinau devāv ādhattāṃ puṣkarasrajau.\nOm mayi medhāṃ mayi prajāṃ mayy agnis tejo dadhātu.\nOm mayi medhāṃ mayi prajāṃ mayīndra indriyaṃ dadhātu.\nOm mayi medhāṃ mayi prajāṃ mayi sūryo bhrājo dadhātu.", "gloss": "May Savitā, Sarasvatī and the Aśvins bestow on me keen intellect; may Agni, Indra and the Sun establish in me intelligence, progeny, lustre and strength."}, "vp-tejosi": {"verse": "Om yat te agne tejas tenāhaṃ tejasvī bhūyāsam.\nOm yat te agne varcas tenāhaṃ varcasvī bhūyāsam.\nOm yat te agne haras tenāhaṃ harasvī bhūyāsam.\nOm tejo 'si tejo mayi dhehi. Om vīryam asi vīryaṃ mayi dhehi. Om balam asi balaṃ mayi dhehi. Om ojo 'sy ojo mayi dhehi. Om manyur asi manyuṃ mayi dhehi. Om saho 'si saho mayi dhehi.", "gloss": "O fiery Lord, by Your splendour, lustre and energy may I become full of splendour, lustre and energy. You are the form of splendour, vigour, strength, energy, ardour and victory — bestow them all upon me."}, "sangathan-sukt": {"verse": "Om samāno mantraḥ samitiḥ samānī samānaṃ manaḥ saha cittam eṣām.\nsamānaṃ mantram abhi mantraye vaḥ samānena vo haviṣā juhomi.\nsamānī va ākūtiḥ samānā hṛdayāni vaḥ.\nsamānam astu vo mano yathā vaḥ susahāsati.", "gloss": "Common be your resolve, common your hearts, and united your minds, so that your fellowship may be firm and harmonious."}, "niyam": {"gloss": "The ten principles laid down by Maharshi Dayananda Saraswati.", "html": "<ol class=\"niyam\"><li>God is the primary cause of all true knowledge and of all that is known through it.</li><li>God is existent, conscious, all-blissful, formless, almighty, just, merciful, unborn, infinite, unchangeable, beginningless, incomparable, the support and the lord of all, all-pervading, immanent, unaging, immortal, fearless, eternal, holy, and the maker of all. He alone is worthy of worship.</li><li>The Vedas are the scriptures of all true knowledge. It is the paramount duty of all Aryas to read them, to teach them, to recite them and to hear them recited.</li><li>One should always be ready to accept truth and to give up untruth.</li><li>All actions should be performed in accordance with dharma — that is, after due consideration of right and wrong.</li><li>The chief aim of the Arya Samaj is to do good to the world — to promote the physical, spiritual and social progress of all.</li><li>Our conduct towards all should be guided by love, righteousness and justice.</li><li>We should dispel ignorance and promote knowledge.</li><li>No one should be content with promoting only one's own good; one should regard one's own good as lying in the good of all.</li><li>One should regard oneself bound to observe the rules that benefit society as a whole, while remaining free in rules that pertain to individual welfare.</li></ol>"}};
 const DATA = [
   { id:"gayatri-gayan", deva:"गायत्री गायन", rom:"Opening Gayatri & Invocation",
     gloss:"सत्संग के आरम्भ में गायत्री-गायन एवं उद्बोधन।",
@@ -413,21 +445,43 @@ const tree = document.getElementById('tree');
 const tocList = document.getElementById('tocList');
 
 function nodeHTML(n, depth){
+  const e = (typeof EN!=='undefined' && EN[n.id]) ? EN[n.id] : {};
   const hasKids = n.children && n.children.length;
   let inner = '';
-  if(n.gloss && (n.verse||n.html||hasKids)) inner += `<p class="gloss intro">${n.gloss}</p>`;
-  if(n.verse) inner += `<div class="verse">${n.verse}</div>`;
+  if(n.gloss && (n.verse||n.html||hasKids)){
+    inner += `<p class="gloss intro deva-only">${n.gloss}</p>`;
+    if(e.gloss) inner += `<p class="gloss intro en-only">${e.gloss}</p>`;
+  }
+  if(n.verse){
+    inner += `<div class="verse deva-only">${n.verse}</div>`;
+    if(e.verse) inner += `<div class="verse translit en-only">${e.verse}</div>`;
+  }
   if(n.src) inner += `<div class="src">— ${n.src}</div>`;
-  if(n.gloss && !n.verse && !n.html && !hasKids) inner += `<p class="gloss">${n.gloss}</p>`;
-  if(n.gloss2) inner += `<p class="gloss">${n.gloss2}</p>`;
-  if(n.html) inner += n.html;
+  if(n.gloss && !n.verse && !n.html && !hasKids){
+    inner += `<p class="gloss deva-only">${n.gloss}</p>`;
+    if(e.gloss) inner += `<p class="gloss en-only">${e.gloss}</p>`;
+  }
+  if(n.gloss2){
+    inner += `<p class="gloss deva-only">${n.gloss2}</p>`;
+    if(e.gloss2) inner += `<p class="gloss en-only">${e.gloss2}</p>`;
+  }
+  if(n.html){
+    inner += `<div class="deva-only">${n.html}</div>`;
+    if(e.html) inner += `<div class="en-only">${e.html}</div>`;
+  }
   if(hasKids) inner += n.children.map(c=>nodeHTML(c, depth+1)).join('');
-  const text = [n.deva,n.rom,n.gloss,n.gloss2,n.verse,n.src,n.html].filter(Boolean).join(' ');
+  const text = [n.deva,n.rom,n.gloss,n.gloss2,n.verse,n.src,e.verse,e.gloss,e.gloss2].filter(Boolean).join(' ');
+  const enTitle = e.title || n.rom || n.deva;
   return `<details class="node" id="${n.id}" data-text="${escapeAttr(text)}">
     <summary class="row">
       <span class="twist" aria-hidden="true">▶</span>
-      <span class="heading"><span class="h-deva">${n.deva}</span><span class="h-rom">${n.rom||''}</span></span>
-      <a class="anchor" href="#${n.id}" title="इस अंश का लिंक" aria-label="Link to ${n.rom||n.deva}" onclick="event.stopPropagation()">
+      <span class="heading">
+        <span class="h-deva deva-only">${n.deva}</span>
+        <span class="h-en en-only">${enTitle}</span>
+        <span class="h-rom deva-only">${n.rom||''}</span>
+        <span class="h-rom en-only">${n.deva}</span>
+      </span>
+      <a class="anchor" href="#${n.id}" title="Link" aria-label="Link to ${n.rom||n.deva}" onclick="event.stopPropagation()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>
       </a>
     </summary>
@@ -437,7 +491,7 @@ function nodeHTML(n, depth){
 function escapeAttr(s){return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 
 tree.innerHTML = DATA.map(n=>nodeHTML(n,0)).join('');
-tocList.innerHTML = DATA.map(n=>`<li><a href="#${n.id}">${n.deva}</a></li>`).join('');
+tocList.innerHTML = DATA.map(n=>`<li><a href="#${n.id}"><span class="deva-only">${n.deva}</span><span class="en-only">${(typeof EN!=="undefined"&&EN[n.id]&&EN[n.id].title)||n.rom||n.deva}</span></a></li>`).join('');
 document.getElementById('count').textContent = `${DATA.length} खण्ड`;
 
 const allDetails = ()=>Array.from(document.querySelectorAll('details.node'));
@@ -476,6 +530,19 @@ function filterNode(d,q){
   d.querySelectorAll(':scope > .body > details.node').forEach(c=>{ const m=filterNode(c,q); c.classList.toggle('hidden',!m); if(m){c.open=true;childMatch=true;} });
   return selfMatch||childMatch;
 }
+
+// ----- language toggle -----
+(function(){
+  var bDeva=document.getElementById('langDeva'), bEn=document.getElementById('langEn');
+  function setLang(en){
+    document.body.classList.toggle('lang-en', en);
+    bEn.classList.toggle('lang-on', en); bDeva.classList.toggle('lang-on', !en);
+    bEn.setAttribute('aria-pressed', en?'true':'false');
+    bDeva.setAttribute('aria-pressed', en?'false':'true');
+  }
+  bDeva.addEventListener('click', function(){ setLang(false); });
+  bEn.addEventListener('click', function(){ setLang(true); });
+})();
 </script>
 
 <script>
@@ -504,6 +571,52 @@ function filterNode(d,q){
     }catch(_){}
   }
   buildPng();
+})();
+</script>
+<nav class="reader-nav" aria-label="क्रमशः नेविगेशन / Verse navigation">
+  <button class="nav-prev" id="navPrev" aria-label="पिछला / Previous">&#8249; <span class="nav-label">पिछला</span></button>
+  <span class="nav-ind" id="navInd">– / –</span>
+  <button class="nav-next" id="navNext" aria-label="अगला / Next"><span class="nav-label">अगला</span> &#8250;</button>
+</nav>
+<script>
+(function(){
+  var order = Array.prototype.slice.call(document.querySelectorAll('details.node')).map(function(n){return n.id;});
+  var cur = -1;
+  var prevBtn=document.getElementById('navPrev'), nextBtn=document.getElementById('navNext'), ind=document.getElementById('navInd');
+  function reveal(id){
+    var el=document.getElementById(id); if(!el) return;
+    var p=el; while(p&&p.tagName){ if(p.tagName==='DETAILS') p.open=true; p=p.parentElement; }
+    el.scrollIntoView({block:'center'});
+    var s=el.querySelector('summary'); if(s){s.classList.add('target-glow');setTimeout(function(){s.classList.remove('target-glow');},1600);}
+  }
+  function update(){
+    ind.textContent=(cur<0?'–':(cur+1))+' / '+order.length;
+    prevBtn.disabled = cur<=0;
+    nextBtn.disabled = cur>=order.length-1;
+  }
+  function isHidden(id){var el=document.getElementById(id);return el&&el.classList.contains('hidden');}
+  function step(dir){
+    var i=cur;
+    do{ i+=dir; }while(i>=0 && i<order.length && isHidden(order[i]));
+    if(i>=0 && i<order.length){ cur=i; reveal(order[cur]); update(); }
+  }
+  nextBtn.addEventListener('click',function(){ step(1); });
+  prevBtn.addEventListener('click',function(){ step(-1); });
+  // keep position in sync when the user opens a node, or uses the contents/anchor links
+  document.getElementById('tree').addEventListener('click',function(e){
+    var d=e.target.closest('details.node'); if(!d) return;
+    var idx=order.indexOf(d.id); if(idx>-1){ cur=idx; update(); }
+  });
+  document.addEventListener('click',function(e){
+    var a=e.target.closest('a[href^="#"]'); if(!a) return;
+    var idx=order.indexOf(a.getAttribute('href').slice(1)); if(idx>-1){ cur=idx; update(); }
+  });
+  // arrow keys (ignored while typing in search)
+  document.addEventListener('keydown',function(e){
+    var t=e.target; if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA')) return;
+    if(e.key==='ArrowRight'){ step(1); } else if(e.key==='ArrowLeft'){ step(-1); }
+  });
+  update();
 })();
 </script>
 </body>
