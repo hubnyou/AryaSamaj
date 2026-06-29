@@ -172,6 +172,45 @@
     .search{padding:6px 7px;}
     .toolbar .count{margin-left:auto;font-size:.72rem;}
   }
+  /* --- major sections: color-coded spines + tinted headers --- */
+  #tree > details.node{border-left:5px solid var(--sec,#C5631E);}
+  #tree > details.node > summary.row{background:var(--secbg,transparent);padding:17px 16px;}
+  #tree > details.node > summary.row .twist,#tree > details.node > summary.row .h-rom{color:var(--sec,#C5631E);}
+  #tree > details.node:nth-of-type(7n+1){--sec:#C5631E;--secbg:rgba(197,99,30,.07);}
+  #tree > details.node:nth-of-type(7n+2){--sec:#8E2D1B;--secbg:rgba(142,45,27,.07);}
+  #tree > details.node:nth-of-type(7n+3){--sec:#9A7A1F;--secbg:rgba(154,122,31,.09);}
+  #tree > details.node:nth-of-type(7n+4){--sec:#4F7A45;--secbg:rgba(79,122,69,.09);}
+  #tree > details.node:nth-of-type(7n+5){--sec:#3F7E73;--secbg:rgba(63,126,115,.09);}
+  #tree > details.node:nth-of-type(7n+6){--sec:#7A5C8E;--secbg:rgba(122,92,142,.09);}
+  #tree > details.node:nth-of-type(7n+7){--sec:#A8542B;--secbg:rgba(168,84,43,.09);}
+  /* --- bigger headings --- */
+  .h-deva{font-size:1.22rem;}
+  .h-en{font-size:1.08rem;}
+  #tree > details.node > summary.row .h-deva{font-size:1.46rem;font-weight:500;}
+  #tree > details.node > summary.row .h-en{font-size:1.24rem;}
+  details.node details.node .h-deva{font-size:1.12rem;}
+  details.node details.node .h-en{font-size:1.0rem;}
+  /* --- meaning: third-level toggle --- */
+  .meaning{margin:8px 0 2px;}
+  .meaning > summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:"Marcellus",serif;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);padding:4px 0;}
+  .meaning > summary::-webkit-details-marker{display:none;}
+  .meaning > summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:6px;}
+  .meaning .m-tw{font-size:.6rem;line-height:1;transition:transform .2s;}
+  .meaning[open] > summary .m-tw{transform:rotate(90deg);}
+  .meaning .m-body{padding:2px 0 2px 14px;border-left:2px solid var(--line-soft);margin-top:4px;}
+  .meaning .m-body .gloss{margin:.35em 0;}
+  /* --- hawan length suggestions --- */
+  .hawan{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 6px;padding:10px 12px;background:#FFFDF8;border:1px solid var(--line-soft);border-radius:12px;}
+  .hawan-lab{font-family:"Marcellus",serif;font-size:.8rem;color:var(--muted);letter-spacing:.04em;}
+  .hbtn{font-family:"Noto Sans Devanagari",sans-serif;font-size:.82rem;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);padding:7px 12px;border-radius:999px;transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
+  .hbtn small{color:var(--gold);font-size:.72rem;}
+  .hbtn:hover{border-color:var(--saffron);color:var(--saffron);}
+  .hbtn.on{background:var(--saffron);border-color:var(--saffron);color:#fff;}
+  .hbtn.on small{color:#ffe9d6;}
+  .hbtn.ghost{color:var(--muted);}
+  .hawan-note{font-family:"Marcellus",serif;font-size:.76rem;color:var(--saffron);margin-left:auto;}
+  #tree > details.node.prog-hide{display:none;}
+  @media(max-width:600px){.hawan{gap:6px;padding:9px 9px;}.hbtn{padding:6px 10px;font-size:.78rem;}.hawan-note{margin-left:0;flex-basis:100%;}}
 </style>
 </head>
 <body>
@@ -211,6 +250,15 @@
   </header>
 
   <nav class="toc" aria-label="विषय-सूची / Contents"><h2 id="tocHeading">विषय-सूची</h2><ol id="tocList"></ol></nav>
+
+  <div class="hawan" role="group" aria-label="हवन सुझाव / Hawan suggestions">
+    <span class="hawan-lab"><span class="deva-only">हवन-काल:</span><span class="en-only">Hawan length:</span></span>
+    <button class="hbtn" data-prog="short"><span class="deva-only">संक्षिप्त</span><span class="en-only">Short</span> <small>~15′</small></button>
+    <button class="hbtn" data-prog="medium"><span class="deva-only">मध्यम</span><span class="en-only">Medium</span> <small>~30′</small></button>
+    <button class="hbtn" data-prog="full"><span class="deva-only">पूर्ण</span><span class="en-only">Full</span> <small>~60′</small></button>
+    <button class="hbtn ghost" data-prog="reset"><span class="deva-only">रीसेट</span><span class="en-only">Reset</span></button>
+    <span class="hawan-note" id="hawanNote" aria-live="polite"></span>
+  </div>
 
   <div class="toolbar" role="toolbar" aria-label="नियंत्रण">
     <label class="search">
@@ -492,26 +540,31 @@ function nodeHTML(n, depth){
   const e = (typeof EN!=='undefined' && EN[n.id]) ? EN[n.id] : {};
   const hasKids = n.children && n.children.length;
   let inner = '';
-  if(n.gloss && (n.verse||n.html||hasKids)){
+  if(n.gloss && hasKids){
     inner += `<p class="gloss intro deva-only">${n.gloss}</p>`;
     if(e.gloss) inner += `<p class="gloss intro en-only">${e.gloss}</p>`;
+  }
+  if(n.html){
+    inner += `<div class="deva-only">${n.html}</div>`;
+    if(e.html) inner += `<div class="en-only">${e.html}</div>`;
   }
   if(n.verse){
     inner += `<div class="verse deva-only">${n.verse}</div>`;
     if(e.verse) inner += `<div class="verse translit en-only">${e.verse}</div>`;
   }
-  if(n.src) inner += `<div class="src">— ${n.src}</div>`;
+  if(n.src){
+    inner += `<div class="src deva-only">— ${n.src}</div>`;
+    inner += `<div class="src en-only">— ${srcEn(n.src)}</div>`;
+  }
+  if(n.verse){
+    const md = [n.gloss,n.gloss2].filter(Boolean).map(x=>`<p class="gloss deva-only">${x}</p>`).join('');
+    const meng = [e.gloss,e.gloss2].filter(Boolean).map(x=>`<p class="gloss en-only">${x}</p>`).join('');
+    if(md||meng) inner += `<details class="meaning"><summary class="m-row"><span class="m-tw" aria-hidden="true">▶</span><span class="m-lab deva-only">अर्थ</span><span class="m-lab en-only">Meaning</span></summary><div class="m-body">${md}${meng}</div></details>`;
+  }
   if(n.gloss && !n.verse && !n.html && !hasKids){
     inner += `<p class="gloss deva-only">${n.gloss}</p>`;
     if(e.gloss) inner += `<p class="gloss en-only">${e.gloss}</p>`;
-  }
-  if(n.gloss2){
-    inner += `<p class="gloss deva-only">${n.gloss2}</p>`;
-    if(e.gloss2) inner += `<p class="gloss en-only">${e.gloss2}</p>`;
-  }
-  if(n.html){
-    inner += `<div class="deva-only">${n.html}</div>`;
-    if(e.html) inner += `<div class="en-only">${e.html}</div>`;
+    if(n.gloss2){ inner += `<p class="gloss deva-only">${n.gloss2}</p>`; if(e.gloss2) inner += `<p class="gloss en-only">${e.gloss2}</p>`; }
   }
   if(hasKids) inner += n.children.map(c=>nodeHTML(c, depth+1)).join('');
   const text = [n.deva,n.rom,n.gloss,n.gloss2,n.verse,n.src,e.verse,e.gloss,e.gloss2].filter(Boolean).join(' ');
@@ -533,6 +586,14 @@ function nodeHTML(n, depth){
   </details>`;
 }
 function escapeAttr(s){return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function srcEn(s){
+  if(!s) return '';
+  var m={'यजुर्वेद':'Yajurveda','ऋग्वेद':'Rigveda','अथर्ववेद':'Atharvaveda','सामवेद':'Samaveda','गायत्री':'Gayatri','मनुस्मृति':'Manusmriti','मन्त्र':'Mantra'};
+  var out=String(s);
+  for(var k in m) out=out.split(k).join(m[k]);
+  out=out.replace(/[०१२३४५६७८९]/g,function(d){return '०१२३४५६७८९'.indexOf(d);});
+  return out;
+}
 
 tree.innerHTML = DATA.map(n=>nodeHTML(n,0)).join('');
 tocList.innerHTML = DATA.map(n=>`<li><a href="#${n.id}"><span class="deva-only">${n.deva}</span><span class="en-only">${(typeof EN!=="undefined"&&EN[n.id]&&EN[n.id].title)||n.rom||n.deva}</span></a></li>`).join('');
@@ -656,7 +717,7 @@ function filterNode(d,q){
 <script>
 (function(){
   var order = Array.prototype.slice.call(document.querySelectorAll('details.node')).map(function(n){return n.id;});
-  var cur = -1;
+  var cur = 0;
   var prevBtn=document.getElementById('navPrev'), nextBtn=document.getElementById('navNext'),
       navInput=document.getElementById('navInput'), navTotal=document.getElementById('navTotal');
   function reveal(id){
@@ -688,7 +749,7 @@ function filterNode(d,q){
     navInput.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); jumpToInput(); navInput.blur(); } });
     navInput.addEventListener('blur',jumpToInput);
   }
-  function isHidden(id){var el=document.getElementById(id);return el&&el.classList.contains('hidden');}
+  function isHidden(id){var el=document.getElementById(id);if(!el)return true;if(el.classList.contains('hidden'))return true;var sec=el;while(sec&&sec.parentElement&&sec.parentElement.id!=='tree'){sec=sec.parentElement;}if(sec&&sec.classList&&sec.classList.contains('prog-hide'))return true;return false;}
   function step(dir){
     var i=cur;
     do{ i+=dir; }while(i>=0 && i<order.length && isHidden(order[i]));
@@ -711,10 +772,54 @@ function filterNode(d,q){
     var t=e.target; if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA')) return;
     if(e.key==='ArrowRight'){ step(1); } else if(e.key==='ArrowLeft'){ step(-1); }
   });
-  document.addEventListener('langchange', update);
-  update();
+  document.addEventListener('langchange', update);  update();
 })();
 </script>
 <script>window.addEventListener('load',function(){if(window.__setLang)window.__setLang(document.body.classList.contains('lang-en'));});</script>
+<script>
+(function(){
+  var progs={
+    short:['gayatri-gayan','swasti-vachan','shanti-karan','yajna-vidhi','aarti','jaighosh'],
+    medium:['gayatri-gayan','vaidik-sandhya','ishwar-stuti','swasti-vachan','shanti-karan','shiv-sankalp','yajna-vidhi','yajna-prarthna','shanti-path','aarti','jaighosh'],
+    full:null
+  };
+  var notes={
+    short:['संक्षिप्त विधि — लगभग १५ मिनट','Short vidhi — about 15 min'],
+    medium:['मध्यम विधि — लगभग ३० मिनट','Medium vidhi — about 30 min'],
+    full:['पूर्ण विधि — लगभग ६० मिनट','Full vidhi — about 60 min'],
+    reset:['','']
+  };
+  var bar=document.querySelector('.hawan'); if(!bar) return;
+  var noteEl=document.getElementById('hawanNote');
+  function tops(){ return Array.prototype.slice.call(document.querySelectorAll('#tree > details.node')); }
+  function setNote(key){ var en=document.body.classList.contains('lang-en'); noteEl.textContent=(notes[key]||['',''])[en?1:0]; }
+  var active='';
+  function apply(key){
+    active=key;
+    tops().forEach(function(d){
+      if(key==='reset'){ d.classList.remove('prog-hide'); d.open=false; return; }
+      var inc=(key==='full')?true:(progs[key].indexOf(d.id)>-1);
+      d.classList.toggle('prog-hide', !inc);
+      if(inc){ d.open=true; Array.prototype.forEach.call(d.querySelectorAll('details.node'),function(c){c.open=true;}); }
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('#tocList li'),function(li){
+      var a=li.querySelector('a[href^="#"]'); if(!a) return;
+      var id=a.getAttribute('href').slice(1);
+      var hide=(key!=='reset'&&key!=='full')&&progs[key].indexOf(id)===-1;
+      li.style.display=hide?'none':'';
+    });
+    Array.prototype.forEach.call(bar.querySelectorAll('.hbtn'),function(b){
+      b.classList.toggle('on', key!=='reset' && b.getAttribute('data-prog')===key);
+    });
+    setNote(key);
+    if(key!=='reset'){
+      var first=tops().filter(function(d){return !d.classList.contains('prog-hide');})[0];
+      if(first) first.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+  }
+  bar.addEventListener('click',function(e){ var b=e.target.closest('.hbtn'); if(!b) return; apply(b.getAttribute('data-prog')); });
+  document.addEventListener('langchange',function(){ if(active && active!=='reset') setNote(active); });
+})();
+</script>
 </body>
 </html>
