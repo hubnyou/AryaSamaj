@@ -77,11 +77,14 @@
   .niyam li::before{content:counter(n);position:absolute;left:0;top:9px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:"Marcellus",serif;font-size:.9rem;color:#fff;background:linear-gradient(160deg,var(--saffron),var(--ember));}
   .toc{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:16px 18px;margin-top:6px;}
   .toc h2{font-family:"Marcellus",serif;font-weight:400;font-size:.82rem;letter-spacing:.22em;text-transform:uppercase;color:var(--saffron);margin:0 0 10px;}
-  .toc ol{margin:0;padding-left:1.1em;columns:2;column-gap:28px;}
+  .toc ol{margin:0;padding:0;list-style:none;counter-reset:toc;
+    display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,auto);gap:6px 28px;}
+  .toc ol li{counter-increment:toc;position:relative;padding-left:1.8em;}
+  .toc ol li::before{content:counter(toc)".";position:absolute;left:0;top:0;color:var(--gold);font-family:"Marcellus",serif;font-size:.82rem;min-width:1.4em;}
   .toc li{margin:5px 0;break-inside:avoid;}
   .toc a{color:var(--ink);text-decoration:none;font-size:.96rem;font-family:"Tiro Devanagari Hindi",serif;border-bottom:1px solid transparent;transition:border-color .15s,color .15s;}
   .toc a:hover{color:var(--saffron);border-bottom-color:var(--saffron);}
-  @media(max-width:560px){.toc ol{columns:1;}}
+  @media(max-width:560px){.toc ol{grid-auto-flow:row;grid-template-rows:none;}}
   .target-glow{animation:glow 1.6s ease;}
   @keyframes glow{0%{box-shadow:0 0 0 3px rgba(197,99,30,.55)}100%{box-shadow:0 0 0 3px rgba(197,99,30,0)}}
   .hidden{display:none !important;}
@@ -107,7 +110,7 @@
     background:#fff;border:1px solid var(--line);border-radius:7px;padding:3px 2px;outline:none;-moz-appearance:textfield;}
   .reader-nav .nav-input:hover{border-color:var(--saffron);}
   .reader-nav .nav-input:focus{border-color:var(--saffron);box-shadow:0 0 0 2px rgba(197,99,30,.16);}
-  @media(max-width:400px){.reader-nav .nav-label{display:none;}.reader-nav button{padding:8px 12px;}}
+  @media(max-width:400px){.reader-nav button{padding:8px 10px;}.reader-nav .nav-label{font-size:.78rem;}}
 
   /* ---------- QR launcher + modal ---------- */
   .qr-fab{position:fixed;top:14px;right:16px;z-index:60;width:46px;height:46px;border-radius:13px;cursor:pointer;
@@ -260,7 +263,7 @@
     <h1 class="title"><span class="deva-only">आर्य सत्संग गुटका</span><span class="en-only">Arya Satsang Gutka</span></h1>
   </header>
 
-  <nav class="toc" aria-label="विषय-सूची / Contents"><h2 id="tocHeading">विषय-सूची</h2><ol id="tocList"></ol></nav>
+  <nav class="toc" aria-label="विषय-सूची / Contents"><h2 id="tocHeading">विषय-सूची</h2><ol id="tocList" style="--toc-rows:7"></ol></nav>
 
   <div class="hawan" role="group" aria-label="हवन सुझाव / Hawan suggestions">
     <span class="hawan-lab"><span class="deva-only">हवन-काल:</span><span class="en-only">Hawan length:</span></span>
